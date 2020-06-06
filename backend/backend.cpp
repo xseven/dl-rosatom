@@ -1,8 +1,9 @@
 #include "backend.h"
 
-
 #include <QWebSocket>
+#include <QTextCodec>
 #include <QDebug>
+#include <QFile>
 
 Backend::Backend(qint32 port, QObject* parent)
 	: QObject(parent)
