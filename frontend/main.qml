@@ -1,6 +1,6 @@
- import QtQuick 2.12
+import QtQuick 2.12
 import QtQuick.Window 2.12
-import QtWebSockets 1.0
+import QtWebSockets 1.15
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.15
 
@@ -33,7 +33,13 @@ Window {
             url: "ws://127.0.0.1:2748"
 
             onTextMessageReceived: {
-                messageBox.text = messageBox.text + "\nReceived message: " + message
+                console.log("Received text message: " + message)
+            }
+
+            onBinaryMessageReceived: {
+                console.log("Received binary message: " + message)
+
+                ResultsModel.insertEntries(message)
             }
     }
 
@@ -62,26 +68,29 @@ Window {
             }
     }
 
-    ListModel {
-        id: nameModel
-        ListElement { name: "Alice" }
-        ListElement { name: "Bob" }
-        ListElement { name: "Jane" }
-        ListElement { name: "Harry" }
-        ListElement { name: "Wendy" }
-    }
-    Component {
-        id: nameDelegate
 
-        Text {
-            text: name;
-            font.pixelSize: 24
+    Component {
+        id: wrappingDelegate
+
+        RowLayout
+        {
+            width: parent.width
+
+            Text {
+                font.pixelSize: 15
+                text: entry
+                color: "#ECECEC"
+                wrapMode: Text.Wrap
+                Layout.fillWidth: true
+
+            }
         }
     }
 
 
-     GridLayout {
+    GridLayout {
         id: grid
+
         columns: 2
 
         anchors.top: parent.top
@@ -145,7 +154,7 @@ Window {
             packet.department = department.text
             packet.keywords = keywords.text
 
-            socket.sendTextMessage(JSON.stringify(packet))
+            socket.sendBinaryMessage(JSON.stringify(packet))
           }
 
           enabled: false
@@ -155,8 +164,8 @@ Window {
          //[]
       ListView {
           clip: true
-          model: nameModel
-          delegate: nameDelegate
+          model: ResultsModel
+          delegate: wrappingDelegate
 
           anchors.top: grid.bottom
           anchors.bottom: parent.bottom

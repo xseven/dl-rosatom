@@ -4,6 +4,8 @@
 
 #include <QAbstractListModel>
 #include <QJsonObject>
+#include <QJsonDocument>
+#include <QJsonArray>
 
 class ResultsModel : public QAbstractListModel
 {
@@ -53,6 +55,23 @@ public:
         roles[LinkRole] = "link";
 
         return roles;
+    }
+
+public slots:
+    void insertEntries(const QByteArray& data)
+    {
+        beginResetModel();
+
+        auto doc = QJsonDocument::fromJson(data);
+        const auto& array = doc.array();
+
+        entries.clear();
+
+        for(const auto& arrayItem : array) {
+            entries.push_back(arrayItem.toObject());
+        }
+
+        endResetModel();
     }
 
 private:

@@ -43,12 +43,39 @@ void Backend::onNewConnection() noexcept
 void Backend::processTextMessage(const QString& message) noexcept
 {
     qDebug() << QStringLiteral("Text message: %1").arg(message);
-    aaa
 }
 
 void Backend::processBinaryMessage(const QByteArray& message) noexcept
 {
-    qDebug() << QStringLiteral("Binary message: %1").arg(QString::fromUtf8(message.toHex()));
+    qDebug() << QStringLiteral("Binary message: %1").arg(QString::fromUtf8(message));
+
+    auto connection = qobject_cast<QWebSocket*>(sender());
+
+    {
+        QFile file;
+        file.setFileName("result_table.json");
+        file.open(QIODevice::ReadOnly | QIODevice::Text);
+        auto data = file.readAll();
+        file.close();
+
+        connection->sendBinaryMessage(data);
+
+        /*
+        auto doc = QJsonDocument::fromJson(data);
+
+        const auto& entries = doc.array();
+
+        for (const auto& entry : entries) {
+            auto entryItem = entry.toObject();
+
+            int id = entryItem.value("id").toInt();
+            QString position = entryItem.value("Position").toString();
+            QString path = entryItem.value("path").toString();
+
+            qDebug() << id << " " << position << " " << path;
+        }
+        */
+    }
 }
 
 void Backend::disconnected() noexcept
