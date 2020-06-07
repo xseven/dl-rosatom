@@ -14,8 +14,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 set(THRIFT_SRC
-${CMAKE_BINARY_DIR}/generated-thrift/protocol_constants.cpp
-${CMAKE_BINARY_DIR}/generated-thrift/protocol_types.cpp
+#${CMAKE_BINARY_DIR}/generated-thrift/protocol_constants.cpp
+#${CMAKE_BINARY_DIR}/generated-thrift/protocol_types.cpp
 )
 
 add_custom_command(

@@ -1,9 +1,13 @@
-#include "backend.h"
+﻿#include "backend.h"
 
 #include <QWebSocket>
-#include <QTextCodec>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QDebug>
 #include <QFile>
+#include <QProcess>
+#include <QCoreApplication>
+#include <QDir>
 
 Backend::Backend(qint32 port, QObject* parent)
 	: QObject(parent)
@@ -51,6 +55,56 @@ void Backend::processBinaryMessage(const QByteArray& message) noexcept
 
     auto connection = qobject_cast<QWebSocket*>(sender());
 
+    auto object = QJsonDocument::fromJson(message).object();
+
+    auto cmd = object.value(QStringLiteral("cmd")).toString();
+
+    if (cmd == QStringLiteral("getdata")) {
+        QProcess process;
+        QString scriptFile = QDir::toNativeSeparators(QCoreApplication::applicationDirPath() + "/Rosatom_docs.py");
+
+        QStringList pythonCommandArguments = QStringList() << scriptFile
+            << object.value(QStringLiteral("position")).toString() << object.value(QStringLiteral("department")).toString() << object.value(QStringLiteral("keywords")).toString();
+        
+        QFile file("./docs/results_table.json");
+        file.remove();
+
+        QObject::connect(&process, &QProcess::errorOccurred, this, [](QProcess::ProcessError error) {
+            qDebug() << "process error: " << error;
+        });
+
+        process.start("python", pythonCommandArguments);
+        process.waitForFinished(-1);
+        auto conStdOut = process.readAllStandardOutput();
+        auto conStdErr = process.readAllStandardError();
+        qDebug() << "exit code: " << process.exitCode() << " error: " << process.error();
+        qDebug() << "Process stdout: " << conStdOut;
+        qDebug() << "Process stderr: " << conStdErr;
+                
+        process.close();
+                
+        file.setFileName("./docs/results_table.json");
+        
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            auto data = file.readAll();
+            file.close();
+
+            connection->sendBinaryMessage(data);
+        }
+    }
+
+#if 0
+    QProcess process;
+    QString scriptFile = QCoreApplication::applicationDirPath() + "../../scriptPath/script.py";
+
+    QStringList pythonCommandArguments = QStringList() << scriptFile
+        << "-f " << parameter1 << "-t" << parameter2 << "-v"
+        << parameter3 << "-e" << parameter4;
+
+    printf("PyCommand: %s\n", qStringToStdString(pythonCommandArguments.join(' ')).c_str());
+
+    process.start("python", pythonCommandArguments);
+
     {
         QFile file;
         file.setFileName("result_table.json");
@@ -76,6 +130,7 @@ void Backend::processBinaryMessage(const QByteArray& message) noexcept
         }
         */
     }
+#endif
 }
 
 void Backend::disconnected() noexcept
