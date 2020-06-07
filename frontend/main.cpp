@@ -1,5 +1,6 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include <QDebug>
 #include <QTextCodec>
 
@@ -24,7 +25,12 @@ int main(int argc, char *argv[])
                      }
     , Qt::QueuedConnection);
 
+    ResultsModel resultsModel;
+
+    engine.rootContext()->setContextProperty(QStringLiteral("ResultsModel"), &resultsModel);
     engine.load(url);
+
+
 
     return app.exec();
 }
