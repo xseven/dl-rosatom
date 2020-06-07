@@ -14,8 +14,6 @@ Window {
 
     color: "#222831"
 
-    signal qmlSignal(msg: string)
-
     Timer {
         id: socketTimer
 
@@ -27,71 +25,6 @@ Window {
         }
     }
 
-    RowLayout {
-
-    GridLayout {
-          id: grid
-          columns: 2
-
-          //[0]
-          Text {
-              text: qsTr("Ваша должность:");
-              color: "#ECECEC"
-              font.bold: true;
-          }
-
-          TextEdit {
-              id: position
-
-              text: "Зоотехник"
-              color: "#ECECEC"
-              focus: true
-          }
-
-          //[1]
-          Text {
-              text: qsTr("Подразделение:");
-              color: "#ECECEC"
-              font.bold: true;
-          }
-
-          TextEdit {
-              id: department
-
-              text: "Ветеринарная служба"
-              color: "#ECECEC"
-              focus: true
-          }
-
-          //[2]
-          Text {
-              text: qsTr("Ключевые слова (разделенные запятой):");
-              color: "#ECECEC"
-              font.bold: true;
-          }
-
-          TextEdit {
-              id: keywords
-
-              text: "Уход за животными, ветеринария, кормление"
-              color: "#ECECEC"
-              focus: true
-          }
-
-          //[3]
-          Button {
-            id: sendButton
-
-            text: qsTr("Сформировать")
-            onClicked: {
-                console.log(position.text + "," + department.text + "," + keywords.text)
-                socket.sendTextMessage(position.text + "," + department.text + "," + keywords.text)
-            }
-
-            enabled: false
-          }
-        }
-
     WebSocket {
             id: socket
 
@@ -101,8 +34,8 @@ Window {
 
             onTextMessageReceived: {
                 messageBox.text = messageBox.text + "\nReceived message: " + message
-            }            
-        }
+            }
+    }
 
     Connections {
             target: socket
@@ -122,12 +55,12 @@ Window {
                     console.log("Connection closed")
                     reconnect()
                 } else if(socket.status ==+ WebSocket.Error) {
-                    console.error("error: " + socket.errorString)                    
+                    console.error("error: " + socket.errorString)
                 } else if(socket.status == WebSocket.Connecting) {
                     console.log("Connecting to " + socket.url)
                 }
             }
-        }
+    }
 
     ListModel {
         id: nameModel
@@ -139,45 +72,99 @@ Window {
     }
     Component {
         id: nameDelegate
+
         Text {
             text: name;
             font.pixelSize: 24
         }
     }
 
-    ListView {
-        clip: true
-        model: nameModel
-        delegate: nameDelegate
-        header: bannercomponent
-        footer: Rectangle {
-            width: parent.width; height: 30;
-            gradient: clubcolors
+
+     GridLayout {
+        id: grid
+        columns: 2
+
+        anchors.top: parent.top
+        height: root.height / 3
+
+        //[0]
+        Text {
+            text: qsTr("Ваша должность:");
+            color: "#ECECEC"
+            font.bold: true;
         }
-        highlight: Rectangle {
-            width: parent.width
-            color: "lightgray"
+
+        TextEdit {
+            id: position
+
+            text: "Зоотехник"
+            color: "#ECECEC"
+            focus: true
+        }
+
+        //[1]
+        Text {
+            text: qsTr("Подразделение:");
+            color: "#ECECEC"
+            font.bold: true;
+        }
+
+        TextEdit {
+            id: department
+
+            text: "Ветеринарная служба"
+            color: "#ECECEC"
+            focus: true
+        }
+
+        //[2]
+        Text {
+            text: qsTr("Ключевые слова (разделенные запятой):");
+            color: "#ECECEC"
+            font.bold: true;
+        }
+
+        TextEdit {
+            id: keywords
+
+            text: "Уход за животными, ветеринария, кормление"
+            color: "#ECECEC"
+            focus: true
+        }
+
+        //[3]
+        Button {
+          id: sendButton
+
+          text: qsTr("Сформировать")
+          onClicked: {
+            console.log(position.text + "," + department.text + "," + keywords.text)
+            var packet = {}
+            packet.cmd = "getdata"
+            packet.position = position.text
+            packet.department = department.text
+            packet.keywords = keywords.text
+
+            socket.sendTextMessage(JSON.stringify(packet))
+          }
+
+          enabled: false
         }
     }
 
-    Component {     //instantiated when header is processed
-        id: bannercomponent
-        Rectangle {
-            id: banner
-            width: parent.width; height: 50
-            gradient: clubcolors
-            border {color: "#9EDDF2"; width: 2}
-            Text {
-                anchors.centerIn: parent
-                text: "Club Members"
-                font.pixelSize: 32
-            }
-        }
-    }
-    Gradient {
-        id: clubcolors
-        GradientStop { position: 0.0; color: "#8EE2FE"}
-        GradientStop { position: 0.66; color: "#7ED2EE"}
-    }
-    }
+         //[]
+      ListView {
+          clip: true
+          model: nameModel
+          delegate: nameDelegate
+
+          anchors.top: grid.bottom
+          anchors.bottom: parent.bottom
+          width: root.width
+
+          highlight: Rectangle {
+              width: parent.width
+              color: "lightgray"
+          }
+      }
 }

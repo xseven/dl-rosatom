@@ -26,11 +26,5 @@ int main(int argc, char *argv[])
 
     engine.load(url);
 
-    auto rooItem = engine.rootObjects()[0];
-
-    DataManipulator dataManipulator;
-    QObject::connect(rooItem, SIGNAL(qmlSignal(QString)),
-                         &dataManipulator, SLOT(serializeData(QString)));
-
     return app.exec();
 }
