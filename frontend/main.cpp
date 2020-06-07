@@ -3,7 +3,7 @@
 #include <QDebug>
 #include <QTextCodec>
 
-#include "datamanipulator.h"
+#include "resultsmodel.h"
 
 int main(int argc, char *argv[])
 {    

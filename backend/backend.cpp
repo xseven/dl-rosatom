@@ -43,6 +43,7 @@ void Backend::onNewConnection() noexcept
 void Backend::processTextMessage(const QString& message) noexcept
 {
     qDebug() << QStringLiteral("Text message: %1").arg(message);
+    aaa
 }
 
 void Backend::processBinaryMessage(const QByteArray& message) noexcept
