@@ -69,7 +69,20 @@ def parse_hd(document, tokenizer=ltokenizer):
     hline=lines[i_head]
     if i_head<len(lines)-1:
         hline+=lines[i_head+1]
-    return hline, lines
+    tok_begin="Должностные обязанности"
+    tok_end="Права"
+    i_begin=0
+    i_end=0
+    cnt=0
+    for l in lines:
+        if tok_begin in l:
+            i_begin=cnt+1
+        if tok_end in l:
+            i_end=cnt
+        cnt+=1
+    #hline=lines[i_begin]
+    main_cont=lines[i_begin+1:i_end]
+    return hline, main_cont
 
 
 # In[7]:
@@ -99,6 +112,13 @@ all_data=get_data_text_pd()
 # In[9]:
 
 
+#a=all_data.loc[3,"Text"][0]
+#a
+
+
+# In[10]:
+
+
 def dump_json(data,local_path="./docs/"):
     short_data=pd.DataFrame(index=all_data.index, columns=["id", "Position", "path"])
     short_data["id"]=all_data.index.copy(deep=True)
@@ -107,13 +127,13 @@ def dump_json(data,local_path="./docs/"):
     short_data.to_json(path_or_buf=local_path+"gen_table.json", orient='records')
 
 
-# In[10]:
+# In[11]:
 
 
 dump_json(all_data)
 
 
-# In[11]:
+# In[12]:
 
 
 def prepare_text(init_text, tokenizer, stop_words, morpher):
@@ -132,16 +152,34 @@ def prepare_text(init_text, tokenizer, stop_words, morpher):
     return tokens_lemmatized
 
 
+# def parse_instruction(document, tokenizer=ltokenizer):
+#     lines=tokenizer.tokenize(document)
+#     tok_begin="Должностные обязанности"
+#     tok_end="Права"
+#     i_begin=0
+#     i_end=0
+#     cnt=0
+#     for l in lines:
+#         if tok_begin in l:
+#             i_begin=cnt+1
+#         if tok_end in l:
+#             i_end=cnt
+#         cnt+=1
+#     hline=lines[i_begin]
+#     main_cont=lines[i_begin+1:i_end]
+#     the_rest=lines[0:i_begin]+lines[i_end+1:-1]
+#     return hline, main_cont, the_rest
+
 # ## Готовим инструменты
 
-# In[12]:
+# In[13]:
 
 
 import re
 import logging
 
 import gensim.downloader as api
-import nltk
+#import nltk
 from nltk.corpus import stopwords
 #from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.tokenize import RegexpTokenizer
@@ -158,55 +196,55 @@ import pymorphy2
 
 # ## Подключаем gensim и загружаем векторную модель слов (уже готовую, model.model)
 
-# In[13]:
+# In[14]:
 
 
 import gensim
 
 
-# In[14]:
-
-
-logging.basicConfig(format="%(levelname)s - %(asctime)s: %(message)s", datefmt= '%H:%M:%S', level=logging.INFO)
-
-
 # In[15]:
 
 
-api.BASE_DIR='.\\docs\\model\\' #myPath+'model/' #C:\\Users\\Home\\gensim-data\\'
+#logging.basicConfig(format="%(levelname)s - %(asctime)s: %(message)s", datefmt= '%H:%M:%S', level=logging.INFO)
 
 
 # In[16]:
 
 
-api.BASE_DIR
+api.BASE_DIR='.\\docs\\model\\' #myPath+'model/' #C:\\Users\\Home\\gensim-data\\'
 
 
 # In[17]:
 
 
-#model=api.load("word2vec-ruscorpora-300")
+api.BASE_DIR
 
 
 # In[18]:
 
 
-mod_path=os.getcwd()
+#model=api.load("word2vec-ruscorpora-300")
 
 
 # In[19]:
 
 
-mod_path=os.getcwd()+'\\docs\\model\\model.model'
+mod_path=os.getcwd()
 
 
 # In[20]:
 
 
-mod_path
+mod_path=os.getcwd()+'\\docs\\model\\model.model'
 
 
 # In[21]:
+
+
+mod_path
+
+
+# In[22]:
 
 
 md=gensim.models.KeyedVectors.load(mod_path) #("C:\\Users\\Home\\gensim-data\\model.model") #C:\\Users\\Home\\gensim-data\\model.model
@@ -214,13 +252,13 @@ md=gensim.models.KeyedVectors.load(mod_path) #("C:\\Users\\Home\\gensim-data\\mo
 
 # ## Получаем входной текст и предобрабатываем его: леммтизация, токенизация, выкидывание стоп-слов, частых/редких слов
 
-# In[22]:
+# In[23]:
 
 
 import sys
 
 
-# In[23]:
+# In[24]:
 
 
 if len(sys.argv)>3:
@@ -231,14 +269,14 @@ else:
     init_text="службы начальника производства испытания устройств и электротехнических измерений монтаж сетей электрообородования"
 
 
-# In[24]:
+# In[25]:
 
 
 #hdr="Генеральный директор"
 #init_text="Администрация, руководство персоналом, работа с документами"
 
 
-# In[25]:
+# In[26]:
 
 
 stop_words = stopwords.words('russian')
@@ -246,19 +284,19 @@ stop_words = stopwords.words('russian')
 
 # ### Разбиваем текст на отдельные токены (здесь, по сути, на слова)
 
-# In[26]:
+# In[27]:
 
 
 tokenizer = RegexpTokenizer('\w+|[^\w\s]+\.') # с паттернами сложно, надо отрегулировать #'\w+|[^\w\s]+'
 
 
-# In[27]:
+# In[28]:
 
 
 morph = pymorphy2.MorphAnalyzer()
 
 
-# In[28]:
+# In[29]:
 
 
 tokens_lemmatized=prepare_text(init_text, tokenizer, stop_words, morph)
@@ -266,7 +304,7 @@ tokens_lemmatized=prepare_text(init_text, tokenizer, stop_words, morph)
 
 # ## Получаем входную базу текста
 
-# In[29]:
+# In[30]:
 
 
 #headers, data_text, the_rest=get_data_text()
@@ -277,7 +315,7 @@ tokens_lemmatized=prepare_text(init_text, tokenizer, stop_words, morph)
 
 # ### Сначала - топ рекомендуемых документов, выбранных по заголовкам
 
-# In[30]:
+# In[31]:
 
 
 def rem_token(lst,token):
@@ -289,7 +327,7 @@ def rem_token(lst,token):
         return
 
 
-# In[31]:
+# In[32]:
 
 
 def get_top_docs(hdr, data, REtokenizer, stop_words, morpher, model, n=5):
@@ -315,10 +353,24 @@ def get_top_docs(hdr, data, REtokenizer, stop_words, morpher, model, n=5):
     return top_docs
 
 
-# In[32]:
+# In[33]:
 
 
-def get_top_texts(init_text, data, top_docs, REtokenizer, stop_words, morpher, model, n=5):
+def get_metric(tok_small, tok_big, model):
+    tot_sum=0
+    for t1 in tok_small:
+        rate=0
+        for t2 in tok_big:
+            rate=max(model.similarity(t1, t2),rate)
+        tot_sum+=rate
+    tot_sum=tot_sum/(len(tok_small))
+    return sum            
+
+
+# In[34]:
+
+
+def get_top_texts(init_text, data, top_docs, REtokenizer, stop_words, morpher, model, n=10):
     tokens_lemmatized=prepare_text(init_text, REtokenizer, stop_words, morpher)
     sim_list=[]
     result=pd.DataFrame(index=range(0,n), columns=["Position", "Text", "File name"])
@@ -330,6 +382,7 @@ def get_top_texts(init_text, data, top_docs, REtokenizer, stop_words, morpher, m
             text_lemmatized=prepare_text(text, REtokenizer, stop_words, morpher)
             if (len(tokens_lemmatized)==0 or len(text_lemmatized)==0):
                 continue
+            #sim=get_metric(tokens_lemmatized, text_lemmatized, model)
             sim=model.n_similarity(tokens_lemmatized, text_lemmatized)
             sim_list.append((sim,cnt,i))
             cnt+=1
@@ -351,19 +404,19 @@ def get_top_texts(init_text, data, top_docs, REtokenizer, stop_words, morpher, m
 
 
 
-# In[33]:
+# In[35]:
 
 
 top_docs=get_top_docs(hdr, all_data, tokenizer, stop_words, morph, md)
 
 
-# In[34]:
+# In[36]:
 
 
 result=get_top_texts(init_text, all_data, top_docs, tokenizer, stop_words, morph, md)
 
 
-# In[35]:
+# In[37]:
 
 
 dump_data=pd.DataFrame(index=result.index, columns=["id", "Position", "Text", "path"])
@@ -374,10 +427,16 @@ dump_data["Text"]=result["Text"].copy(deep=True)
 dump_data.to_json(path_or_buf="./docs/"+"result_table.json", orient='records')
 
 
-# In[36]:
+# In[38]:
 
 
-result.loc[4,"Text"]
+result.head()
+
+
+# In[42]:
+
+
+result.iloc[2,1]
 
 
 # In[ ]:
